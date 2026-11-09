@@ -6,7 +6,12 @@ OUTDIR/c/<token>/certificaten/ blijven staan en worden op de pagina getoond.
 import json, os, sys, html, datetime, base64, shutil
 
 SRC, OUT = sys.argv[1], sys.argv[2]
-REPO = "TIPI98/Rigging"
+REPO = "Deco-subsea/rigging"
+import re
+def slug_of(c):
+    if c.get("slug"): return c["slug"]
+    m = re.search(r"([A-Z]{4})\s*(\d{6})\s*-?\s*(\d)", (c.get("naam") or "").upper())
+    return (m.group(1) + m.group(2) + m.group(3)) if m else c["pub"]
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOGO = "data:image/png;base64," + base64.b64encode(open(os.path.join(HERE, "logo.png"), "rb").read()).decode()
 E = lambda s: html.escape(str(s if s is not None else ""))
@@ -83,7 +88,12 @@ def item_card(it, role):
 
 
 def build(c, outdir):
-    d = os.path.join(outdir, "c", c["pub"])
+    slug = slug_of(c)
+    d = os.path.join(outdir, "container", slug)
+    old = os.path.join(outdir, "c", c["pub"])
+    if c.get("pub") and slug != c["pub"]:
+        os.makedirs(old, exist_ok=True)
+        open(os.path.join(old, "index.html"), "w").write(f'<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=../../container/{slug}/"><link rel="canonical" href="../../container/{slug}/"><a href="../../container/{slug}/">Ga naar de containerpagina</a>')
     cd = os.path.join(d, "certificaten")
     os.makedirs(cd, exist_ok=True)
     keep = os.path.join(cd, ".gitkeep")
@@ -103,7 +113,7 @@ def build(c, outdir):
     body.append(f'<div id="certs" style="display:flex;flex-direction:column;gap:8px">{inner}</div>')
     for u in c.get("dtlinks") or []:
         body.append(f'<a href="{E(u)}" target="_blank" rel="noopener">Container in DigiTags (Vinçotte) / Container in DigiTags</a>')
-    body.append(f"""<script>(function(){{var u="https://api.github.com/repos/{REPO}/contents/c/{c['pub']}/certificaten";
+    body.append(f"""<script>(function(){{var u="https://api.github.com/repos/{REPO}/contents/container/{slug}/certificaten";
 fetch(u).then(function(r){{return r.ok?r.json():null}}).then(function(a){{if(!a||!a.length)return;var p=a.filter(function(f){{return /\\.pdf$/i.test(f.name)}});if(!p.length)return;
 var box=document.getElementById("certs");box.innerHTML="";p.forEach(function(f){{var l=document.createElement("a");l.className="btn";l.href="certificaten/"+encodeURIComponent(f.name);l.target="_blank";l.rel="noopener";
 l.textContent=f.name.replace(/\\.pdf$/i,"")+" (PDF)";box.appendChild(l);}});}}).catch(function(){{}});}})();</script>""")
