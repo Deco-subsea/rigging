@@ -6,6 +6,7 @@ OUTDIR/c/<token>/certificaten/ blijven staan en worden op de pagina getoond.
 import json, os, sys, html, datetime, base64, shutil
 
 SRC, OUT = sys.argv[1], sys.argv[2]
+REPO = "TIPI98/Rigging"
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOGO = "data:image/png;base64," + base64.b64encode(open(os.path.join(HERE, "logo.png"), "rb").read()).decode()
 E = lambda s: html.escape(str(s if s is not None else ""))
@@ -98,10 +99,12 @@ def build(c, outdir):
     body = [f'<div class="hd"><img src="{LOGO}" alt="DECO Subsea"><div><small>DECO Subsea Services · container & rigging</small><h1>{E(c.get("naam"))}</h1></div></div>',
             '<div class="kv">' + "".join(f"<div><small>{E(a)}</small><b>{E(b)}</b></div>" for a, b in kv) + "</div>"]
     body.append("<h2>Certificaten container / Container certificates</h2>")
-    if pdfs:
-        body += [f'<a class="btn" href="certificaten/{E(f)}" target="_blank" rel="noopener">{E(os.path.splitext(f)[0])} (PDF)</a>' for f in pdfs]
-    else:
-        body.append('<div class="meta">Nog geen certificaat opgeladen / No certificate uploaded yet.</div>')
+    inner = "".join(f'<a class="btn" href="certificaten/{E(f)}" target="_blank" rel="noopener">{E(os.path.splitext(f)[0])} (PDF)</a>' for f in pdfs) or '<div class="meta">Nog geen certificaat opgeladen / No certificate uploaded yet.</div>'
+    body.append(f'<div id="certs" style="display:flex;flex-direction:column;gap:8px">{inner}</div>')
+    body.append(f"""<script>(function(){{var u="https://api.github.com/repos/{REPO}/contents/c/{c['pub']}/certificaten";
+fetch(u).then(function(r){{return r.ok?r.json():null}}).then(function(a){{if(!a||!a.length)return;var p=a.filter(function(f){{return /\\.pdf$/i.test(f.name)}});if(!p.length)return;
+var box=document.getElementById("certs");box.innerHTML="";p.forEach(function(f){{var l=document.createElement("a");l.className="btn";l.href="certificaten/"+encodeURIComponent(f.name);l.target="_blank";l.rel="noopener";
+l.textContent=f.name.replace(/\\.pdf$/i,"")+" (PDF)";box.appendChild(l);}});}}).catch(function(){{}});}})();</script>""")
     body.append("<h2>4 leg sling</h2>")
     body.append(item_card(snap["sling"], "Sling") if snap.get("sling") else '<div class="meta">Geen sling geregistreerd / No sling registered.</div>')
     sh = snap.get("sh") or []
