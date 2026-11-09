@@ -93,7 +93,7 @@ def build(c, outdir):
     sect = "tool" if tool else "container"
     d = os.path.join(outdir, sect, slug)
     old = os.path.join(outdir, "c", c["pub"])
-    if c.get("pub") and slug != c["pub"]:
+    if c.get("pub") and slug != c["pub"] and not tool:
         os.makedirs(old, exist_ok=True)
         open(os.path.join(old, "index.html"), "w").write(f'<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=../../container/{slug}/"><link rel="canonical" href="../../container/{slug}/"><a href="../../container/{slug}/">Ga naar de containerpagina</a>')
     cd = os.path.join(d, "certificaten")
