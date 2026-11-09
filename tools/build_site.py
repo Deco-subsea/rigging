@@ -120,11 +120,22 @@ def build(c, outdir):
 fetch(u).then(function(r){{return r.ok?r.json():null}}).then(function(a){{if(!a||!a.length)return;var p=a.filter(function(f){{return /\\.pdf$/i.test(f.name)}});if(!p.length)return;
 var box=document.getElementById("certs");box.innerHTML="";p.forEach(function(f){{var l=document.createElement("a");l.className="btn";l.href="certificaten/"+encodeURIComponent(f.name);l.target="_blank";l.rel="noopener";
 l.textContent=f.name.replace(/\\.pdf$/i,"")+" (PDF)";box.appendChild(l);}});}}).catch(function(){{}});}})();</script>""")
-    body.append("<h2>Sling</h2>")
-    body.append(item_card(snap["sling"], "Sling") if snap.get("sling") else '<div class="meta">Geen sling geregistreerd / No sling registered.</div>')
-    sh = snap.get("sh") or []
-    body.append(f"<h2>Shackles &amp; hijsogen / lifting points ({len(sh)})</h2>")
-    body += [item_card(s, "Shackle" if s.get("soort") == "Shackles" else "Hijsoog / Lifting eye") for s in sh] or ['<div class="meta">Geen shackles geregistreerd / No shackles registered.</div>']
+    if tool:
+        lo = snap.get("loler") or {"kd": c.get("kd", ""), "ed": ""}
+        ch, txt = keur({"ed": lo.get("ed")})
+        body.insert(2, f'<div class="card"><div class="t"><b>LOLER keuring tool / LOLER inspection</b><span class="chip {ch}">{E(txt)}</span></div><div class="meta">{E(("Gekeurd / Inspected " + dmy(lo.get("kd"))) if lo.get("kd") else "Geen keuring ingevuld / No inspection on file")}{E(" · interval " + str(lo.get("int", 12)) + " maanden / months") if lo.get("kd") else ""}</div></div>')
+        rig = snap.get("rig") or []
+        body.append(f"<h2>Rigging op de tool / Rigging on the tool ({len(rig)})</h2>")
+        body += [item_card(s, s.get("soort", "")) for s in rig] or ['<div class="meta">Geen rigging geregistreerd / No rigging registered.</div>']
+        sp = snap.get("sp") or []
+        body.append(f"<h2>Spare onderdelen / Spare parts ({len(sp)})</h2>")
+        body += [item_card(s, "Spare") for s in sp] or ['<div class="meta">Geen spares geregistreerd / No spares registered.</div>']
+    else:
+        body.append("<h2>4 leg sling</h2>")
+        body.append(item_card(snap["sling"], "Sling") if snap.get("sling") else '<div class="meta">Geen sling geregistreerd / No sling registered.</div>')
+        sh = snap.get("sh") or []
+        body.append(f"<h2>Shackles ({len(sh)})</h2>")
+        body += [item_card(s, "Shackle") for s in sh] or ['<div class="meta">Geen shackles geregistreerd / No shackles registered.</div>']
     stand = dmy((snap.get("at") or c.get("at") or "")[:10])
     body.append(f'<div class="foot">Stand / Status: {E(stand)} · DECO Subsea N.V. · Peraltastraat 5, 8000 Brugge · +32 50 31 10 92 · <a href="https://www.deco-subsea.be">www.deco-subsea.be</a></div>')
     open(os.path.join(d, "index.html"), "w").write(page(c.get("naam") or "Container", "".join(body)))
