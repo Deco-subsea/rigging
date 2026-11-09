@@ -101,6 +101,8 @@ def build(c, outdir):
     body.append("<h2>Certificaten container / Container certificates</h2>")
     inner = "".join(f'<a class="btn" href="certificaten/{E(f)}" target="_blank" rel="noopener">{E(os.path.splitext(f)[0])} (PDF)</a>' for f in pdfs) or '<div class="meta">Nog geen certificaat opgeladen / No certificate uploaded yet.</div>'
     body.append(f'<div id="certs" style="display:flex;flex-direction:column;gap:8px">{inner}</div>')
+    for u in c.get("dtlinks") or []:
+        body.append(f'<a href="{E(u)}" target="_blank" rel="noopener">Container in DigiTags (Vinçotte) / Container in DigiTags</a>')
     body.append(f"""<script>(function(){{var u="https://api.github.com/repos/{REPO}/contents/c/{c['pub']}/certificaten";
 fetch(u).then(function(r){{return r.ok?r.json():null}}).then(function(a){{if(!a||!a.length)return;var p=a.filter(function(f){{return /\\.pdf$/i.test(f.name)}});if(!p.length)return;
 var box=document.getElementById("certs");box.innerHTML="";p.forEach(function(f){{var l=document.createElement("a");l.className="btn";l.href="certificaten/"+encodeURIComponent(f.name);l.target="_blank";l.rel="noopener";
