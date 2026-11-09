@@ -124,6 +124,19 @@ l.textContent=f.name.replace(/\\.pdf$/i,"")+" (PDF)";box.appendChild(l);}});}}).
         lo = snap.get("loler") or {"kd": c.get("kd", ""), "ed": ""}
         ch, txt = keur({"ed": lo.get("ed")})
         body.insert(2, f'<div class="card"><div class="t"><b>LOLER keuring tool / LOLER inspection</b><span class="chip {ch}">{E(txt)}</span></div><div class="meta">{E(("Gekeurd / Inspected " + dmy(lo.get("kd"))) if lo.get("kd") else "Geen keuring ingevuld / No inspection on file")}{E(" · interval " + str(lo.get("int", 12)) + " maanden / months") if lo.get("kd") else ""}</div></div>')
+        parts = snap.get("parts") or []
+        if parts:
+            body.append(f"<h2>Onderdelen / Components ({len(parts)})</h2>")
+            for pt in parts:
+                if int(pt.get("int") or 12) == 0:
+                    pc, ptx = "off", "Niet LOLER plichtig / No LOLER required"
+                else:
+                    pc, ptx = keur({"ed": pt.get("ed")})
+                info = " · ".join(x for x in [("SN " + pt["sn"]) if pt.get("sn") else "", (kg(pt["kg"]) + (" per stuk / each" if (pt.get("n") or 1) > 1 else "")) if pt.get("kg") not in (None, "") else "",
+                                              ("SWL " + wll(pt["swl"])) if pt.get("swl") not in (None, "") else "", ("LOLER " + dmy(pt["kd"])) if pt.get("kd") else ""] if x)
+                nm = (str(pt.get("n")) + " × " if (pt.get("n") or 1) > 1 else "") + str(pt.get("naam", ""))
+                rg = "".join(item_card(s, s.get("soort", "")) for s in (pt.get("rig") or []))
+                body.append(f'<div class="card"><div class="t"><b>{E(nm)}</b><span class="chip {pc}">{E(ptx)}</span></div><div class="meta">{E(info)}</div>{rg}</div>')
         rig = snap.get("rig") or []
         body.append(f"<h2>Rigging op de tool / Rigging on the tool ({len(rig)})</h2>")
         body += [item_card(s, s.get("soort", "")) for s in rig] or ['<div class="meta">Geen rigging geregistreerd / No rigging registered.</div>']
