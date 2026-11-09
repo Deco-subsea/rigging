@@ -105,7 +105,7 @@ def build(c, outdir):
     g = sorted(c.get("gew") or [], key=lambda x: x.get("d") or x.get("at") or "")
     last = g[-1] if g else None
     snap = c.get("snap") or {}
-    kv = ([("Type", c.get("type") or "–"), ("Eigen gewicht / Own weight", kg(c.get("mgw")))] if tool else
+    kv = ([("Type", c.get("type") or "–"), ("SWL", wll(c.get("swl"))), ("Eigen gewicht / Own weight", kg(c.get("mgw")))] if tool else
           [("Type", c.get("type") or "–"), ("M.G.W.", kg(c.get("mgw"))), ("Tare", kg(c.get("tare"))), ("Payload", kg(c.get("pay")))]) + [
           ("Gewogen / Weighed", (kg(last["kg"]) + " (" + dmy(last.get("d") or last.get("at")) + ")") if last else "–"),
           ("Inspectie / Inspection", dmy(c.get("kd")) or "–")]
