@@ -89,7 +89,9 @@ def item_card(it, role):
 
 def build(c, outdir):
     slug = slug_of(c)
-    d = os.path.join(outdir, "container", slug)
+    tool = c.get("k") == "tool"
+    sect = "tool" if tool else "container"
+    d = os.path.join(outdir, sect, slug)
     old = os.path.join(outdir, "c", c["pub"])
     if c.get("pub") and slug != c["pub"]:
         os.makedirs(old, exist_ok=True)
@@ -103,25 +105,26 @@ def build(c, outdir):
     g = sorted(c.get("gew") or [], key=lambda x: x.get("d") or x.get("at") or "")
     last = g[-1] if g else None
     snap = c.get("snap") or {}
-    kv = [("Type", c.get("type") or "–"), ("M.G.W.", kg(c.get("mgw"))), ("Tare", kg(c.get("tare"))), ("Payload", kg(c.get("pay"))),
+    kv = ([("Type", c.get("type") or "–"), ("Eigen gewicht / Own weight", kg(c.get("mgw")))] if tool else
+          [("Type", c.get("type") or "–"), ("M.G.W.", kg(c.get("mgw"))), ("Tare", kg(c.get("tare"))), ("Payload", kg(c.get("pay")))]) + [
           ("Gewogen / Weighed", (kg(last["kg"]) + " (" + dmy(last.get("d") or last.get("at")) + ")") if last else "–"),
           ("Inspectie / Inspection", dmy(c.get("kd")) or "–")]
-    body = [f'<div class="hd"><img src="{LOGO}" alt="DECO Subsea"><div><small>DECO Subsea Services · container & rigging</small><h1>{E(c.get("naam"))}</h1></div></div>',
+    body = [f'<div class="hd"><img src="{LOGO}" alt="DECO Subsea"><div><small>DECO Subsea Services · {"tool" if tool else "container"} & rigging</small><h1>{E(c.get("naam"))}</h1></div></div>',
             '<div class="kv">' + "".join(f"<div><small>{E(a)}</small><b>{E(b)}</b></div>" for a, b in kv) + "</div>"]
-    body.append("<h2>Certificaten container / Container certificates</h2>")
+    body.append("<h2>Certificaten tool / Tool certificates</h2>" if tool else "<h2>Certificaten container / Container certificates</h2>")
     inner = "".join(f'<a class="btn" href="certificaten/{E(f)}" target="_blank" rel="noopener">{E(os.path.splitext(f)[0])} (PDF)</a>' for f in pdfs) or '<div class="meta">Nog geen certificaat opgeladen / No certificate uploaded yet.</div>'
     body.append(f'<div id="certs" style="display:flex;flex-direction:column;gap:8px">{inner}</div>')
     for u in c.get("dtlinks") or []:
-        body.append(f'<a href="{E(u)}" target="_blank" rel="noopener">Container in DigiTags (Vinçotte) / Container in DigiTags</a>')
-    body.append(f"""<script>(function(){{var u="https://api.github.com/repos/{REPO}/contents/container/{slug}/certificaten";
+        body.append(f'<a href="{E(u)}" target="_blank" rel="noopener">{"Tool" if tool else "Container"} in DigiTags (Vinçotte)</a>')
+    body.append(f"""<script>(function(){{var u="https://api.github.com/repos/{REPO}/contents/{sect}/{slug}/certificaten";
 fetch(u).then(function(r){{return r.ok?r.json():null}}).then(function(a){{if(!a||!a.length)return;var p=a.filter(function(f){{return /\\.pdf$/i.test(f.name)}});if(!p.length)return;
 var box=document.getElementById("certs");box.innerHTML="";p.forEach(function(f){{var l=document.createElement("a");l.className="btn";l.href="certificaten/"+encodeURIComponent(f.name);l.target="_blank";l.rel="noopener";
 l.textContent=f.name.replace(/\\.pdf$/i,"")+" (PDF)";box.appendChild(l);}});}}).catch(function(){{}});}})();</script>""")
-    body.append("<h2>4 leg sling</h2>")
+    body.append("<h2>Sling</h2>")
     body.append(item_card(snap["sling"], "Sling") if snap.get("sling") else '<div class="meta">Geen sling geregistreerd / No sling registered.</div>')
     sh = snap.get("sh") or []
-    body.append(f"<h2>Shackles ({len(sh)})</h2>")
-    body += [item_card(s, "Shackle") for s in sh] or ['<div class="meta">Geen shackles geregistreerd / No shackles registered.</div>']
+    body.append(f"<h2>Shackles &amp; hijsogen / lifting points ({len(sh)})</h2>")
+    body += [item_card(s, "Shackle" if s.get("soort") == "Shackles" else "Hijsoog / Lifting eye") for s in sh] or ['<div class="meta">Geen shackles geregistreerd / No shackles registered.</div>']
     stand = dmy((snap.get("at") or c.get("at") or "")[:10])
     body.append(f'<div class="foot">Stand / Status: {E(stand)} · DECO Subsea N.V. · Peraltastraat 5, 8000 Brugge · +32 50 31 10 92 · <a href="https://www.deco-subsea.be">www.deco-subsea.be</a></div>')
     open(os.path.join(d, "index.html"), "w").write(page(c.get("naam") or "Container", "".join(body)))
@@ -131,7 +134,7 @@ l.textContent=f.name.replace(/\\.pdf$/i,"")+" (PDF)";box.appendChild(l);}});}}).
 data = json.load(open(SRC))
 docs = [x.get("data", x) for x in (data if isinstance(data, list) else data.values())]
 os.makedirs(OUT, exist_ok=True)
-open(os.path.join(OUT, "index.html"), "w").write(page("DECO Subsea · rigging", f'<div class="hd"><img src="{LOGO}" alt="DECO Subsea"><div><small>DECO Subsea Services</small><h1>Container & rigging</h1></div></div><div class="meta">Scan de QR code op de container. / Scan the QR code on the container.</div>'))
+open(os.path.join(OUT, "index.html"), "w").write(page("DECO Subsea · rigging", f'<div class="hd"><img src="{LOGO}" alt="DECO Subsea"><div><small>DECO Subsea Services</small><h1>Containers, tools & rigging</h1></div></div><div class="meta">Scan de QR code op de container of tool. / Scan the QR code on the container or tool.</div>'))
 open(os.path.join(OUT, ".nojekyll"), "w").close()
 open(os.path.join(OUT, "robots.txt"), "w").write("User-agent: *\nDisallow: /\n")
 n = 0
